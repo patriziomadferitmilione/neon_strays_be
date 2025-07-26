@@ -12,7 +12,7 @@ const UserSchema = new mongoose.Schema({
     birthday:   { type: Date },
     country:    { type: String },
     gender:     { type: String, enum: ['male', 'female', 'nonbinary', 'prefer_not_to_say'] },
-    preferences: [{ type: String }], // e.g., ['rock', 'electronic']
+    preferences: [{ type: String }],
     joinedFrom: { type: String, enum: ['organic', 'instagram', 'tiktok', 'facebook', 'referral', 'other'] },
     newsletter: { type: Boolean, default: false },
 }, { timestamps: true });
