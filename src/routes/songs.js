@@ -6,7 +6,7 @@ const upload = require('../middleware/uploadMiddleware');
 const router = express.Router();
 
 router.get('/', getSongs);
-router.get('/stream/:id', protect, getSongStream);
+router.get('/stream/:id', getSongStream);
 
 // Multiple file inputs: mp3, aac, wav
 router.post(
