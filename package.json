@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/patriziomadferitmilione/neon_strays_be#readme",
   "dependencies": {
+    "archiver": "^7.0.1",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
