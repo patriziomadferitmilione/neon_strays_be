@@ -116,31 +116,27 @@ exports.uploadSong = async (req, res) => {
             return res.status(400).json({ error: 'Title and MP3 are required' });
         }
 
-        // Create unique folder for the song inside /uploads
+        // Ensure uploads base folder exists
         const uploadsDir = path.resolve(process.cwd(), 'uploads');
-        if (!fs.existsSync(uploadsDir)) {
-            fs.mkdirSync(uploadsDir, { recursive: true });
-        }
+        fs.mkdirSync(uploadsDir, { recursive: true });
 
-        // Use timestamp to avoid collisions
+        // Create folder for this song
         const safeTitle = title.replace(/[^a-z0-9_\-]+/gi, '_');
         const songFolder = path.join(uploadsDir, `${Date.now()}_${safeTitle}`);
         fs.mkdirSync(songFolder, { recursive: true });
 
-        // Move uploaded files into this folder
-        function moveFile(file) {
+        const moveFile = (file) => {
             if (!file) return null;
             const newPath = path.join(songFolder, file.originalname);
             fs.renameSync(file.path, newPath);
             return newPath;
-        }
+        };
 
         const mp3Path = moveFile(req.files.mp3?.[0]);
         const aacPath = moveFile(req.files.aac?.[0]);
         const wavPath = moveFile(req.files.wav?.[0]);
         const coverPath = moveFile(req.files.cover?.[0]);
 
-        // Save DB record
         const song = new Song({
             title,
             artist,
@@ -155,15 +151,14 @@ exports.uploadSong = async (req, res) => {
 
         await song.save();
 
+        res.status(201).json({ message: 'Song uploaded', song });
         upload(`Song uploaded: ${title}`, {
             id: song._id.toString(),
             folder: songFolder,
             files: { mp3: mp3Path, aac: aacPath, wav: wavPath, cover: coverPath }
         });
-
-        res.status(201).json({ message: 'Song uploaded', song });
     } catch (e) {
-        err('[songController] uploadSong', e);
+        console.error('[songController] uploadSong', e);
         res.status(500).json({ error: e.message });
     }
 };

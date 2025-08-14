@@ -1,10 +1,14 @@
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 
-// Set destination and filename
+// Ensure temp folder exists
+const tempDir = path.resolve(process.cwd(), 'uploads/tmp');
+fs.mkdirSync(tempDir, { recursive: true });
+
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, 'src/uploads');
+        cb(null, tempDir);
     },
     filename: (req, file, cb) => {
         const ext = path.extname(file.originalname);
@@ -13,17 +17,18 @@ const storage = multer.diskStorage({
     }
 });
 
-// Accept only audio files
+const allowed = [
+    'audio/mpeg', 'audio/wav', 'audio/x-wav', 'audio/aac', 'audio/mp4',
+    'image/jpeg', 'image/png', 'image/webp'
+];
+
 const fileFilter = (req, file, cb) => {
-    const allowed = [
-        'audio/mpeg', 'audio/wav', 'audio/aac', 'audio/mp4',
-        'image/jpeg', 'image/png', 'image/webp'
-    ];
-    if (allowed.includes(file.mimetype)) cb(null, true);
-    else cb(new Error('Unsupported file type'), false);
+    if (allowed.includes(file.mimetype)) {
+        cb(null, true);
+    } else {
+        cb(new Error('Unsupported file type'), false);
+    }
 };
 
-// Configure for multiple fields
 const upload = multer({ storage, fileFilter });
-
 module.exports = upload;
