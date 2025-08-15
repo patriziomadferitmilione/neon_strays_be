@@ -8,6 +8,8 @@ const SongSchema = new mongoose.Schema({
     url_wav:     { type: String },
     url_aac:     { type: String },
 
+    lyrics: { type: String },
+    price: { type: Number, min: 0 },
     duration: { type: Number },
     access: { type: String, enum: ['free', 'paid'], default: 'free' },
     releaseDate: { type: Date, default: Date.now },

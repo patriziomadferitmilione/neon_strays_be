@@ -6,6 +6,7 @@ const { err, upload } = require('../services/logger');
 const fs = require('fs');
 const path = require('path');
 const archiver = require('archiver');
+const mm = require('music-metadata');
 
 exports.getSongs = async (req, res) => {
     try {
@@ -25,6 +26,7 @@ exports.getSongs = async (req, res) => {
                     id: s._id,
                     title: s.title,
                     artist: s.artist,
+                    duration: s.duration,
                     price: s.price,
                     access: s.access,
                     releaseDate: s.releaseDate,
@@ -110,7 +112,7 @@ exports.getSongStream = async (req, res) => {
 
 exports.uploadSong = async (req, res) => {
     try {
-        const { title, artist, album, access, releaseDate } = req.body;
+        const { title, artist, album, access, releaseDate, lyrics, price } = req.body;
 
         if (!title || !req.files?.mp3?.[0]) {
             return res.status(400).json({ error: 'Title and MP3 are required' });
@@ -120,15 +122,23 @@ exports.uploadSong = async (req, res) => {
         const uploadsDir = path.resolve(process.cwd(), 'uploads');
         fs.mkdirSync(uploadsDir, { recursive: true });
 
-        // Create folder for this song
+        // Create unique folder for this song
         const safeTitle = title.replace(/[^a-z0-9_\-]+/gi, '_');
         const songFolder = path.join(uploadsDir, `${Date.now()}_${safeTitle}`);
         fs.mkdirSync(songFolder, { recursive: true });
 
         const moveFile = (file) => {
             if (!file) return null;
+            const tempDir = path.dirname(file.path);
+            fs.mkdirSync(tempDir, { recursive: true });
+            fs.mkdirSync(songFolder, { recursive: true });
+
+            const oldPath = file.path;
             const newPath = path.join(songFolder, file.originalname);
-            fs.renameSync(file.path, newPath);
+
+            console.log('[MOVE] from', oldPath, 'to', newPath);
+
+            fs.renameSync(oldPath, newPath);
             return newPath;
         };
 
@@ -137,21 +147,37 @@ exports.uploadSong = async (req, res) => {
         const wavPath = moveFile(req.files.wav?.[0]);
         const coverPath = moveFile(req.files.cover?.[0]);
 
+        const audioPath = mp3Path || aacPath || wavPath;
+        let duration = null;
+        if (audioPath) {
+            try {
+                const meta = await mm.parseFile(audioPath);
+                duration = Math.round(meta.format.duration);
+            } catch (err) {
+                console.warn(`[uploadSong] Could not read duration for ${title}:`, err.message);
+            }
+        }
+
         const song = new Song({
             title,
             artist,
             album,
             access,
             releaseDate,
+            lyrics,
+            price: access === 'paid' ? Number(price) : 0,
             url_mp3: mp3Path,
             url_aac: aacPath,
             url_wav: wavPath,
             cover: coverPath,
+            duration
         });
 
         await song.save();
 
         res.status(201).json({ message: 'Song uploaded', song });
+
+        // Logging
         upload(`Song uploaded: ${title}`, {
             id: song._id.toString(),
             folder: songFolder,
