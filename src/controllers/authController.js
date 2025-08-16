@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { err } = require('../services/logger');
 
 exports.register = async (req, res) => {
     try {
@@ -30,10 +31,10 @@ exports.register = async (req, res) => {
             newsletter
         });
 
-
         res.status(201).json({ message: 'User registered successfully' });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
+    } catch (e) {
+        err('[authController] register', e);
+        res.status(500).json({ error: e.message });
     }
 };
 
@@ -54,7 +55,17 @@ exports.login = async (req, res) => {
         );
 
         res.json({ token });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
+    } catch (e) {
+        err('[authController] login', e);
+        res.status(500).json({ error: e.message });
+    }
+};
+
+exports.getUser = async (req, res) => {
+    try {
+        res.json(req.user);
+    } catch (e) {
+        err('[authController] getUser', e);
+        res.status(500).json({ error: e.message });
     }
 };
