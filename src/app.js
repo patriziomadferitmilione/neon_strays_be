@@ -14,7 +14,6 @@ const corsOptions = {
     allowedHeaders: ['Content-Type','Authorization'],
 };
 app.use(cors(corsOptions));
-app.options('/*', cors(corsOptions));
 app.use(morgan('dev'));
 app.use(express.json());
 
