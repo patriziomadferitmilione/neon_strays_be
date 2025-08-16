@@ -8,7 +8,13 @@ const albumRoutes = require('./routes/albums');
 const app = express();
 
 // Middlewares
-app.use(cors());
+const corsOptions = {
+    origin: '*',
+    methods: ['GET','POST','PUT','DELETE','OPTIONS'],
+    allowedHeaders: ['Content-Type','Authorization'],
+};
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use(morgan('dev'));
 app.use(express.json());
 
