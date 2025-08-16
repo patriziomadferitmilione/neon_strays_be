@@ -31,6 +31,7 @@ exports.getSongs = async (req, res) => {
                     access: s.access,
                     releaseDate: s.releaseDate,
                     cover: await loadCoverAsDataUri(s.cover),
+                    lyrics: s.lyrics,
                     album: s.album ? {
                         id: s.album._id,
                         title: s.album.title,
